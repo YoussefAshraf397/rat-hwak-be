@@ -43,29 +43,27 @@ class HotelsController extends AbstractController
             'type' => 'City'
         ]);
 
-        $page = $request->query->get('page') ?? 1;
-        $perPage = $request->query->get('per_page') ?? static::HOTELS_PER_PAGE;
-
+        // Handle the case where no locations are found
+        if (empty($locations)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Location not found.'
+            ], 404);
+        }
 
         $currentLocation = $locations[0];
         $locationId = $currentLocation->getId();
-
-//        $query = $this->entityManager
-//            ->createQueryBuilder()
-//            ->select('h.id')
-//            ->from('App\Entity\Hotel', 'h')
-//            ->where('h.locationId=?1')
-//            ->orderBy('h.starRating', 'DESC')
-//            ->setParameter(1, $locationId)
-//            ->setFirstResult($perPage * $page)
-//            ->setMaxResults($perPage)
-//            ->getQuery();
 
         // Pagination parameters
         $page = $request->query->getInt('page', 1);
         $perPage = $request->query->getInt('per_page', static::HOTELS_PER_PAGE);
 
-        $query = $this->entityManager
+        // Star rating filter
+        $starRating = $request->query->get('star_rating');
+
+
+        // Fetch hotel IDs ordered by star rating
+        $queryBuilder = $this->entityManager
             ->createQueryBuilder()
             ->select('h.id')
             ->from('App\Entity\Hotel', 'h')
@@ -73,62 +71,90 @@ class HotelsController extends AbstractController
             ->orderBy('h.starRating', 'DESC')
             ->setParameter('locationId', $locationId)
             ->setFirstResult(($page - 1) * $perPage)
-            ->setMaxResults($perPage)
-            ->getQuery();
+            ->setMaxResults($perPage);
 
-//        dd($query->getSQL());
+        if ($starRating !== null) {
+            $queryBuilder->andWhere('h.starRating = :starRating')
+                ->setParameter('starRating', $starRating);
+        }
+        $query = $queryBuilder->getQuery();
 
         $ids = array_map(static function ($item) {
             return $item['id'];
         }, $query->getResult());
-//        dd($ids);
 
+        if (empty($ids)) {
+            return $this->json([
+                'success' => true,
+                'data' => [
+                    'region_id' => $locationId,
+                    'total' => 0,
+                    'pages' => 0,
+                    'lng' => $currentLocation->getLongitude(),
+                    'lat' => $currentLocation->getLatitude(),
+                    'hotels' => [],
+                ],
+            ]);
+        }
+
+        // Fetch hotels by IDs
         $hotelsRepository = $this->entityManager->getRepository(Hotel::class);
+        $hotelEntities = $hotelsRepository->findBy(['id' => $ids]);
 
-        $query = $this->entityManager
+        // Sort hotels by the order of IDs
+        $hotelMap = [];
+        foreach ($hotelEntities as $hotelEntity) {
+            $hotelMap[$hotelEntity->getId()] = $hotelEntity;
+        }
+        $sortedHotels = array_map(static function ($id) use ($hotelMap) {
+            return $hotelMap[$id];
+        }, $ids);
+
+        // Count total hotels
+        $countQueryBuilder = $this->entityManager
             ->createQueryBuilder()
             ->select('count(h.id)')
             ->from('App\Entity\Hotel', 'h')
-            ->where('h.locationId=?1')
-            ->setParameter(1, $locationId)
-            ->getQuery();
+            ->where('h.locationId = :locationId')
+            ->setParameter('locationId', $locationId);
 
-        $totalHotels = array_pop($query->getResult()[0]);
+        if ($starRating !== null) {
+            $countQueryBuilder->andWhere('h.starRating = :starRating')
+                ->setParameter('starRating', $starRating);
+        }
 
+        $countQuery = $countQueryBuilder->getQuery();
 
+        $totalHotels = (int)$countQuery->getSingleScalarResult();
+
+        // Prepare hotel data
         $hotels = [];
-        foreach ($hotelsRepository->findBy(['id' => $ids]) as $hotelIem) {
-            /**
-             * @var $hotelIem Hotel
-             */
+        foreach ($sortedHotels as $hotelItem) {
+            /** @var Hotel $hotelItem */
             $amenities = [];
-            foreach ($hotelIem->getAmenities()->getIterator() as $amenity) {
-                /**
-                 * @var $amenity HotelAmenities
-                 */
+            foreach ($hotelItem->getAmenities() as $amenity) {
+                /** @var HotelAmenities $amenity */
                 $amenities[] = $amenity->getGroup()->getName();
-
             }
 
-            $image = $hotelIem->getImages()->get(0)?->getImage();
+            $image = $hotelItem->getImages()->first() ? $hotelItem->getImages()->first()->getImage() : null;
             $amenities = array_values(array_unique($amenities));
+
             $hotels[] = [
-                'uri' => $hotelIem->getUri(),
-                'title' => $hotelIem->getTitle(),
-                'address' => $hotelIem->getAddress(),
-                'star_rating' => $hotelIem->getStarRating(),
-                'lng' => $hotelIem->getLongitude(),
-                'lat' => $hotelIem->getLatitude(),
+                'uri' => $hotelItem->getUri(),
+                'title' => $hotelItem->getTitle(),
+                'address' => $hotelItem->getAddress(),
+                'star_rating' => $hotelItem->getStarRating(),
+                'lng' => $hotelItem->getLongitude(),
+                'lat' => $hotelItem->getLatitude(),
                 'amenities' => $amenities,
                 'image' => StringHelper::replaceWithinBracers($image ?? '', 'size', '1024x768'),
                 'reviews' => [
-                    'rating' => (float)$hotelIem->getClientRating(),
-                    'reviews_quantity' => count($hotelIem->getReviews())
+                    'rating' => (float)$hotelItem->getClientRating(),
+                    'reviews_quantity' => count($hotelItem->getReviews())
                 ]
             ];
-
         }
-
 
         return $this->json([
             'success' => true,
@@ -141,6 +167,7 @@ class HotelsController extends AbstractController
                 'hotels' => $hotels,
             ],
         ]);
+
     }
 
 

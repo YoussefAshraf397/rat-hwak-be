@@ -108,6 +108,10 @@ class Location
     {
         return $this->title;
     }
+    public function getRatHawkId(): string
+    {
+        return $this->rateHawkId;
+    }
 
     public function setTitle(string $title): Location
     {

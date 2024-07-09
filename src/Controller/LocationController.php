@@ -22,7 +22,7 @@ class LocationController extends AbstractController
     {
         $query = $this->entityManager
             ->createQueryBuilder()
-            ->select('DISTINCT l.countryName, l.countryCode')
+            ->select('DISTINCT l.countryName, l.countryCode, l.rateHawkId')
             ->from('App\Entity\Location', 'l')
             ->where('l.countryCode IS NOT NULL')
             ->andWhere('l.countryCode != \'\'')
@@ -52,7 +52,10 @@ class LocationController extends AbstractController
         ]);
 
         $data = array_map(static function (Location $item) {
-            return $item->getTitle();
+            return [
+                'title' => $item->getTitle() ,
+                'rat_hawk_id' => $item->getRatHawkId()
+            ];
         }, $query);
 
         return $this->json([
