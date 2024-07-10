@@ -3,6 +3,7 @@
 namespace App\RatehawkApi;
 
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use GuzzleHttp\Utils;
 use Monolog\Handler\RotatingFileHandler;
@@ -168,6 +169,7 @@ class RatehawkApi
             512,
             JSON_THROW_ON_ERROR
         );
+
         if ($response['status'] !== 'ok') {
             throw new \Exception('SEARCH REGION FAILED');
         }

@@ -515,10 +515,12 @@ class HotelsController extends AbstractController
     {
         // Decode the request body
         $body = json_decode($request->getContent(), true);
-        $options['body'] = json_encode($body, JSON_THROW_ON_ERROR);
-//return($this->json($options));
-        // Get search hotel endpoint results
+        $options = [
+            'body' => json_encode($body, JSON_THROW_ON_ERROR),
+        ];
+
         $searchHotelEndpoint = $this->rateHawkApi->getSearchRegion($options);
+
         $apiHotelIds = array_column($searchHotelEndpoint['hotels'], 'id');
 
         if (empty($apiHotelIds)) {
