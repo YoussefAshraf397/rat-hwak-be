@@ -136,7 +136,7 @@ class RatehawkApi
         $fileMetaData = $this->getFileMetaData(Endpoints::HOTEL_REVIEW_DUMP, $options);
 
         return $this->getAndSaveFile($fileMetaData['data']['url']);
-        }
+    }
 
     public function getHotelsIncremental(string $lastUpdate): ?array
     {
@@ -154,6 +154,25 @@ class RatehawkApi
         return [
             'filename' => $this->getAndSaveFile($fileMetaData['data']['url']),
             'last_update' => $fileMetaData['data']['last_update'],
+        ];
+    }
+
+    public function getSearchRegion(array $options = []): array
+    {
+        $response = json_decode(
+            $this->httpClient
+                ->post(Endpoints::HOTEL_SEARCH_REGION , $options)
+                ->getBody()
+                ->getContents(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+        if ($response['status'] !== 'ok') {
+            throw new \Exception('SEARCH REGION FAILED');
+        }
+        return [
+            'hotels' => $response['data']['hotels'],
         ];
     }
 }
