@@ -208,6 +208,11 @@ class HotelRepository
 
     public function insertHotel(array $hotelData): void
     {
+        $existingHotel = $this->entityManager->getRepository(Hotel::class)->findOneBy(['uri' => $hotelData['id']]);
+        if ($existingHotel) {
+            // Hotel already exists, do nothing
+            return;
+        }
         $hotel = (new Hotel())
             ->setPhone($hotelData['phone'] ?? '')
             ->setTitle($this->removeSpecialChars($hotelData['name']))
