@@ -653,6 +653,7 @@ class HotelsController extends AbstractController
                 'uri' => $hotelItem->getUri(),
                 'title' => $hotelItem->getTitle(),
                 'address' => $hotelItem->getAddress(),
+                'location' => $hotelItem->getLocation()->getTitle(),
                 'star_rating' => $hotelItem->getStarRating(),
                 'total_price' => round($totalPrice * 1.2, 2),
                 'match_hash' => $matchHash,
