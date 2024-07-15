@@ -1,0 +1,69 @@
+# HotelHandler Class
+
+The `HotelHandler` class is responsible for handling operations related to hotel data processing. This class includes methods for slicing hotel data files, checking if current files are empty, handling hotel data dumps, saving amenities, and notifying via Telegram during the processing.
+
+## Methods
+
+### `sliceHotelsFile`
+
+This method slices the hotel data file into smaller parts for easier processing.
+
+- Notifies the start of the slicing process.
+- Sets up the file cutter with the necessary parameters.
+- Slices the current file.
+- Notifies the completion of the slicing process.
+- Updates the file handle data to indicate that slicing is no longer needed.
+- Resets the current hotel increment and saves the file handle data.
+
+### `currentFileIsEmpty`
+
+Checks if the current hotel data file is empty.
+
+- Sets up the JSON handler with the specified file.
+- If the file is empty, updates the file handle data to indicate that the hotels dump is done.
+- Returns whether the hotels dump is done.
+
+### `handleHotelsDumpFile`
+
+Handles the processing of the hotels dump file.
+
+- If slicing is needed, it calls `sliceHotelsFile` and returns.
+- If the current file is empty, notifies that the hotels dump is done and returns.
+- Processes the hotel data file, inserting data into the repository in batches.
+- Handles errors and notifies via Telegram.
+
+### `getHotelsDumpFile`
+
+Downloads and decompresses the hotels dump file.
+
+- Calls the API to get the hotels dump.
+- Decompresses the downloaded file.
+- Renames and moves the decompressed file to the storage directory.
+- Returns `true` if successful, `false` otherwise.
+
+### `saveAmenities`
+
+Saves the amenities data from the hotels dump file.
+
+- Checks if the hotels file is empty and returns if it is.
+- Processes the hotel data file, saving amenities data to the repository.
+- Handles errors and notifies via Telegram.
+
+## Notifications
+
+The `HotelHandler` class uses a Telegram notifier to send notifications during the processing of hotel data. Notifications include the start and completion of file slicing, time taken for operations, and any errors encountered.
+
+## Usage
+
+To use the `HotelHandler` class, instantiate it with the necessary dependencies such as `fileCutter`, `jsonHandler`, `hotelRepository`, `telegramNotifier`, and `fileHandleData`. Call the appropriate methods to process hotel data as needed.
+
+```php
+$hotelHandler = new HotelHandler(
+    $fileCutter,
+    $jsonHandler,
+    $hotelRepository,
+    $telegramNotifier,
+    $fileHandleData
+);
+
+$hotelHandler->handleHotelsDumpFile();
