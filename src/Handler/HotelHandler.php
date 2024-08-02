@@ -40,7 +40,7 @@ class HotelHandler extends BaseHandler
 
     public function handleHotelsDumpFile(): void
     {
-//        $this->fileHandleData->setNeedToSliceHotels(true);
+    //    $this->fileHandleData->setNeedToSliceHotels(true);
         if ($this->fileHandleData->isNeedToSliceHotels()) {
             $this->sliceHotelsFile();
             return;

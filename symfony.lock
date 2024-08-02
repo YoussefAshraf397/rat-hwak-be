@@ -1,11 +1,11 @@
 {
     "doctrine/doctrine-bundle": {
-        "version": "2.10",
+        "version": "2.12",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
             "version": "2.10",
-            "ref": "0db4b12b5df45f5122213b4ecd18733ab7fa7d53"
+            "ref": "c170ded8fc587d6bd670550c43dafcf093762245"
         },
         "files": [
             "config/packages/doctrine.yaml",
@@ -14,7 +14,7 @@
         ]
     },
     "doctrine/doctrine-migrations-bundle": {
-        "version": "3.2",
+        "version": "3.3",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
@@ -32,7 +32,7 @@
             "repo": "github.com/symfony/recipes",
             "branch": "main",
             "version": "5.3",
-            "ref": "da0c8be8157600ad34f10ff0c9cc91232522e047"
+            "ref": "1781ff40d8a17d87cf53f8d4cf0c8346ed2bb461"
         },
         "files": [
             "bin/console"
@@ -70,7 +70,7 @@
         ]
     },
     "symfony/maker-bundle": {
-        "version": "1.51",
+        "version": "1.53",
         "recipe": {
             "repo": "github.com/symfony/recipes",
             "branch": "main",
