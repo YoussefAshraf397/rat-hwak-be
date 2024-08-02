@@ -10,7 +10,7 @@ $command = "php {$symfonyAppDir}/bin/console app:handle-hotel-dump";
 chdir($symfonyAppDir);
 
 // Execute the command
-// $output = shell_exec($command);
+ $output = shell_exec($command);
 
 // Log or output the result if needed
 echo ('Cron working');
