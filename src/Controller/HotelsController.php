@@ -900,8 +900,8 @@ class HotelsController extends AbstractController
             'success' => true,
             'data' => [
                 'region_id' => $locationId,
-                'total' => count($hotels),
-                'pages' => ceil(count($hotels) / $perPage),
+                'total' => $totalHotels,
+                'pages' => ceil($totalHotels / $perPage),
                 'current_page' => $page ?? 1,
                 'lng' => $currentLocation->getLongitude(),
                 'lat' => $currentLocation->getLatitude(),
