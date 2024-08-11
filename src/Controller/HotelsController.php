@@ -510,181 +510,6 @@ class HotelsController extends AbstractController
         }
     }
 
-//    #[Route('/hotel-search/{rateHawkId}', name: 'app_hotels_search', methods: ["POST"])]
-//    public function searchHotelsRatHawk(Request $request ,string $rateHawkId): JsonResponse
-//    {
-//        // Decode the request body
-//        $body = json_decode($request->getContent(), true);
-//        $options = [
-//            'body' => json_encode($body, JSON_THROW_ON_ERROR),
-//        ];
-//
-//        $searchHotelEndpoint = $this->rateHawkApi->getSearchRegion($options);
-//
-//        $apiHotelIds = array_column($searchHotelEndpoint['hotels'], 'id');
-//
-//        if (empty($apiHotelIds)) {
-//            return $this->json([
-//                'success' => false,
-//                'message' => 'No hotels found from RateHawk API.'
-//            ], 404);
-//        }
-//
-//        // Fetch location by RateHawk ID
-//        $locationRep = $this->entityManager->getRepository(Location::class);
-//        $locations = $locationRep->findBy([
-//            'rateHawkId' => $rateHawkId,
-//            'type' => 'City'
-//        ]);
-//
-//        if (empty($locations)) {
-//            return $this->json([
-//                'success' => false,
-//                'message' => 'Location not found.'
-//            ], 404);
-//        }
-//
-//        $currentLocation = $locations[0];
-//        $locationId = $currentLocation->getId();
-//
-//        // Pagination parameters
-//        $page = $request->query->getInt('page', 1);
-//        $perPage = $request->query->getInt('per_page', static::HOTELS_PER_PAGE);
-//
-//        // Star rating filter
-//        $starRatings = $request->query->has('star_rating') ? $request->query->get('star_rating') : [];
-//
-//        // Fetch hotel IDs from the database ordered by star rating and filtered by RateHawk API IDs
-//        $queryBuilder = $this->entityManager->createQueryBuilder();
-//        $queryBuilder->select('h.id')
-//            ->from('App\Entity\Hotel', 'h')
-//            ->where('h.locationId = :locationId')
-//            ->andWhere($queryBuilder->expr()->in('h.uri', ':apiHotelIds'))
-//            ->setParameter('locationId', $locationId)
-//            ->setParameter('apiHotelIds', $apiHotelIds)
-//            ->orderBy('h.starRating', 'DESC')
-//            ->setFirstResult(($page - 1) * $perPage)
-//            ->setMaxResults($perPage);
-//
-//        // Handle multiple star ratings
-//        if (!empty($starRatings)) {
-//            $queryBuilder->andWhere($queryBuilder->expr()->in('h.starRating', $starRatings));
-//        }
-//
-//        $query = $queryBuilder->getQuery();
-//        $ids = array_column($query->getResult(), 'id');
-//
-//        if (empty($ids)) {
-//            return $this->json([
-//                'success' => false,
-//                'data' => [
-//                    'region_id' => $locationId,
-//                    'total' => 0,
-//                    'pages' => 0,
-//                    'lng' => $currentLocation->getLongitude(),
-//                    'lat' => $currentLocation->getLatitude(),
-//                    'hotels' => [],
-//                ],
-//            ]);
-//        }
-//
-//        // Fetch hotels by IDs and prepare the hotel data
-//        // Fetch hotels by IDs
-//        $hotelsRepository = $this->entityManager->getRepository(Hotel::class);
-//        $hotelEntities = $hotelsRepository->findBy(['id' => $ids]);
-//
-//        // Sort hotels by the order of IDs
-//        $hotelMap = [];
-//        foreach ($hotelEntities as $hotelEntity) {
-//            $hotelMap[$hotelEntity->getId()] = $hotelEntity;
-//        }
-//        $sortedHotels = array_map(static function ($id) use ($hotelMap) {
-//            return $hotelMap[$id];
-//        }, $ids);
-//
-//        // Count total hotels
-//        $countQueryBuilder = $this->entityManager->createQueryBuilder();
-//        $countQueryBuilder->select('count(h.id)')
-//            ->from('App\Entity\Hotel', 'h')
-//            ->where('h.locationId = :locationId')
-//            ->andWhere($countQueryBuilder->expr()->in('h.uri', ':apiHotelIds'))
-//            ->setParameter('locationId', $locationId)
-//            ->setParameter('apiHotelIds', $apiHotelIds);
-//
-//        if (!empty($starRatings)) {
-//            $countQueryBuilder->andWhere($countQueryBuilder->expr()->in('h.starRating', $starRatings));
-//        }
-//
-//        $countQuery = $countQueryBuilder->getQuery();
-//
-//        $totalHotels = (int)$countQuery->getSingleScalarResult();
-//
-//        // Prepare hotel data
-//        $hotels = [];
-//        foreach ($sortedHotels as $hotelItem) {
-//            /** @var Hotel $hotelItem */
-//            $amenities = [];
-//            foreach ($hotelItem->getAmenities() as $amenity) {
-//                /** @var HotelAmenities $amenity */
-//                $amenities[] = $amenity->getGroup()->getName();
-//            }
-//
-//            $image = $hotelItem->getImages()->first() ? $hotelItem->getImages()->first()->getImage() : null;
-//            // Find the corresponding hotel in the API response to calculate the total price
-//            $totalPrice = 0;
-//            $matchHash = '';
-//            $roomName = '';
-//            $meal = '';
-//            foreach ($searchHotelEndpoint['hotels'] as $apiHotel) {
-//                if ($apiHotel['id'] == $hotelItem->getUri()) {
-//                    $matchHash = $apiHotel['rates'][0]['match_hash'];
-//                    $roomName = $apiHotel['rates'][0]['room_name'];
-//                    $meal = $apiHotel['rates'][0]['meal'];
-//                    foreach ($apiHotel['rates'][0]['daily_prices'] as $price) {
-//                        $totalPrice += (int)$price;
-//                    }
-//                    break;
-//                }
-//            }
-//
-//            $amenities = array_values(array_unique($amenities));
-//
-//            $hotels[] = [
-//                'uri' => $hotelItem->getUri(),
-//                'title' => $hotelItem->getTitle(),
-//                'address' => $hotelItem->getAddress(),
-//                'location' => $hotelItem->getLocation()->getTitle(),
-//                'star_rating' => $hotelItem->getStarRating(),
-//                'total_price' => $totalPrice,
-//                'match_hash' => $matchHash,
-//                'room_name' => $roomName,
-//                'meal' => $meal,
-//                'lng' => $hotelItem->getLongitude(),
-//                'lat' => $hotelItem->getLatitude(),
-//                'amenities' => $amenities,
-//                'image' => StringHelper::replaceWithinBracers($image ?? '', 'size', '1024x768'),
-//                'reviews' => [
-//                    'rating' => (float)$hotelItem->getClientRating(),
-//                    'reviews_quantity' => count($hotelItem->getReviews())
-//                ]
-//            ];
-//        }
-//
-//        return $this->json([
-//            'success' => true,
-//            'data' => [
-//                'region_id' => $locationId,
-//                'total' => $totalHotels,
-//                'pages' => ceil($totalHotels / $perPage),
-//                'lng' => $currentLocation->getLongitude(),
-//                'lat' => $currentLocation->getLatitude(),
-//                'hotels' => $hotels,
-//            ],
-//        ]);
-//    }
-
-
-
     #[Route('/hotel-search/{rateHawkId}', name: 'app_hotels_search', methods: ["POST"])]
     public function searchHotelsRatHawk(Request $request, string $rateHawkId): JsonResponse
     {
@@ -697,6 +522,7 @@ class HotelsController extends AbstractController
         $searchHotelEndpoint = $this->rateHawkApi->getSearchRegion($options);
 
         $apiHotelIds = array_column($searchHotelEndpoint['hotels'], 'id');
+
         // Meal filter
         $mealFilter = $request->query->get('meal', '');
         if (!empty($mealFilter)) {
@@ -761,6 +587,9 @@ class HotelsController extends AbstractController
         $priceFrom = $request->query->getInt('price_from', 0);
         $priceTo = $request->query->getInt('price_to', PHP_INT_MAX);
 
+        // Title filter
+        $title = $request->query->get('title', '');
+
         // Fetch hotel IDs from the database ordered by star rating and filtered by RateHawk API IDs
         $queryBuilder = $this->entityManager->createQueryBuilder();
         $queryBuilder->select('h.id')
@@ -784,6 +613,12 @@ class HotelsController extends AbstractController
                 }
             }
             $queryBuilder->andWhere($starRatingConditions);
+        }
+
+        // Handle title filter with LIKE query
+        if (!empty($title)) {
+            $queryBuilder->andWhere($queryBuilder->expr()->like('h.title', ':title'))
+                ->setParameter('title', '%' . $title . '%');
         }
 
         $query = $queryBuilder->getQuery();
@@ -835,6 +670,12 @@ class HotelsController extends AbstractController
                 }
             }
             $countQueryBuilder->andWhere($starRatingConditions);
+        }
+
+        // Handle title filter in count query
+        if (!empty($title)) {
+            $countQueryBuilder->andWhere($countQueryBuilder->expr()->like('h.title', ':title'))
+                ->setParameter('title', '%' . $title . '%');
         }
 
         $countQuery = $countQueryBuilder->getQuery();
@@ -896,6 +737,14 @@ class HotelsController extends AbstractController
             ];
         }
 
+        // Sort hotels by total price if sort_order is provided
+        $sortOrder = $request->query->get('sort_order', 'lowest');
+        if ($sortOrder === 'lowest') {
+            usort($hotels, fn($a, $b) => $a['total_price'] <=> $b['total_price']);
+        } elseif ($sortOrder === 'highest') {
+            usort($hotels, fn($a, $b) => $b['total_price'] <=> $a['total_price']);
+        }
+
         return $this->json([
             'success' => true,
             'data' => [
@@ -909,5 +758,4 @@ class HotelsController extends AbstractController
             ],
         ]);
     }
-
 }
