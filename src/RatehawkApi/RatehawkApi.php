@@ -88,7 +88,7 @@ class RatehawkApi
             ->getBody()
             ->getContents(),
             true,
-            512,
+            65536,
             JSON_THROW_ON_ERROR
         );
 
@@ -160,6 +160,9 @@ class RatehawkApi
 
     public function getSearchRegion(array $options = []): array
     {
+                //     Log the response using Monolog
+        // $this->logger->info('Search Region options', ['response' => $options]);
+
         $response = json_decode(
             $this->httpClient
                 ->post(Endpoints::HOTEL_SEARCH_REGION , $options)
@@ -169,6 +172,9 @@ class RatehawkApi
             512,
             JSON_THROW_ON_ERROR
         );
+
+        //     Log the response using Monolog
+        // $this->logger->info('Search Region Response', ['response' => $response]);
 
         if ($response['status'] !== 'ok') {
             throw new \Exception('SEARCH REGION FAILED');

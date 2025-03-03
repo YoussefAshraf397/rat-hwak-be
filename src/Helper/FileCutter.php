@@ -6,7 +6,7 @@ use App\Enum\FileCutType;
 
 class FileCutter
 {
-    protected const PIECE_SIZE = 100000;
+    protected const PIECE_SIZE = 1000000;
 
     protected int $basicOffset = 0;
 

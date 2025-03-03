@@ -242,6 +242,9 @@ class HotelRepository
 
         $images = $hotelData['images'] ?? [];
         foreach ($images as $idx => $imageUrl) {
+            if ($idx >= 5) { // Limit to only the first five images
+                break;
+            }
             $hotelImage = (new HotelImage())
                 ->setImageSort($idx + 1)
                 ->setImage($imageUrl)
@@ -292,6 +295,9 @@ class HotelRepository
 
 
             foreach ($roomData['images'] as $idx => $imageUrl) {
+                if ($idx >= 2) { // Limit to only the first two images
+                    break;
+                }
                 $roomImage = (new RoomImage())
                     ->setImage($imageUrl)
                     ->setAlt('')
